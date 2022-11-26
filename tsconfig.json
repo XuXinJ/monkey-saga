@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "UMD",
+    "importHelpers": true,
+    "skipLibCheck": true,
+    "jsx": "react",
+    "allowJs": true,
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "baseUrl": "./",
+    "noImplicitAny": false,
+    "strict": true,
+    "outDir": "./dist",
+    "declaration": true,
+    "removeComments": true,
+    "allowSyntheticDefaultImports": true,
+    "paths": {
+      "@/*": ["./src/*"],
+    }
+  },
+  "include": ["src/**/*", "src/index.d.ts"],
+  "exclude": ["node_modules/**", "dist", "script/*", ".vscode/*"]
+}

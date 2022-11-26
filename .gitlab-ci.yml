@@ -1,0 +1,64 @@
+image:
+  name: nodev14
+
+stages:
+  - publish:test
+  - publish:prd
+
+.Default: &DEFAULT
+  tags:
+    - yyci
+  before_script:
+    - node -v
+    - npm -v
+    - yarn -v
+    - git --version
+    - project_url=$(echo $CI_PROJECT_URL | sed 's/https:\/\///')
+    - git remote set-url origin https://oauth2:$GIT_NODE_TOPKEN@$project_url
+    - git config --global user.email ${GITLAB_USER_EMAIL}
+    - git config --global user.name ${GITLAB_USER_NAME}
+    - cat ~/.yarnrc
+    - rm -rf ~/.yarnrc
+    - yarn config list
+    - yarn config set version-git-message "[ci skip]:v%s"
+
+  after_script:
+    - yarn --registry=https://registry.npm.taobao.org
+    - yarn install
+    - yarn build
+    - rm $HOME/.npmrc
+    - echo 'registry=https://registry.npm.taobao.org' >> ~/.npmrc
+    - echo "@yy:registry=https://registry.npm.taobao.org/" >> $HOME/.npmrc 2> /dev/null
+    - echo '//registry.npm.taobao.org/:_authToken=${NPM_TOKEN}' >> $HOME/.npmrc 2> /dev/null
+    - npm publish
+
+publish:prd:
+  <<: *DEFAULT
+  stage: publish:prd
+  when: manual
+  only:
+    refs:
+      - "master"
+  except:
+    variables:
+      - $CI_COMMIT_MESSAGE=~ /\[ci skip\]/
+  script:
+    - yarn version --patch --no-commit-hooks
+    - git push origin HEAD:master --push-option=ci.skip
+  allow_failure: false
+
+publish:test:
+  <<: *DEFAULT
+  stage: publish:test
+  when: manual
+  only:
+    refs:
+      - branches
+  except:
+    refs:
+      - "master"
+    variables:
+      - $CI_COMMIT_MESSAGE=~ /\[ci skip\]/
+  script:
+    - npx zx ./script/index.js
+  allow_failure: false
